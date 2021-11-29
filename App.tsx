@@ -1,5 +1,5 @@
 /* eslint-disable react-native/no-inline-styles */
-import React, {FC, useCallback} from 'react';
+import React, {FC, useCallback, useEffect, useRef, useState} from 'react';
 import {
   Text,
   SafeAreaView,
@@ -7,12 +7,14 @@ import {
   View,
   TouchableOpacity,
   FlatList,
+  Animated,
 } from 'react-native';
 import {useOrientation} from './src/hooks';
 interface AppProps {}
 
 const App: FC<AppProps> = ({}) => {
   const orientation = useOrientation();
+  const [isSelected, setSelected] = useState<boolean>(false);
   const renderItem = useCallback(({item}) => {
     return (
       <View style={styles.item}>
@@ -23,6 +25,31 @@ const App: FC<AppProps> = ({}) => {
   const renderDivider = useCallback(() => {
     return <View style={styles.divider} />;
   }, []);
+
+  const radioAnimated = useRef(new Animated.Value(0)).current;
+  const circleColor = radioAnimated.interpolate({
+    inputRange: [0, 17],
+    outputRange: ['gray', 'green'],
+  });
+  const lineColor = radioAnimated.interpolate({
+    inputRange: [0, 17],
+    outputRange: ['gray', 'green'],
+  });
+  useEffect(() => {
+    if (isSelected) {
+      Animated.timing(radioAnimated, {
+        toValue: 17,
+        duration: 300,
+        useNativeDriver: false,
+      }).start();
+    } else {
+      Animated.timing(radioAnimated, {
+        toValue: 0,
+        duration: 300,
+        useNativeDriver: false,
+      }).start();
+    }
+  }, [isSelected]);
   return (
     <SafeAreaView
       style={[
@@ -62,6 +89,34 @@ const App: FC<AppProps> = ({}) => {
         ItemSeparatorComponent={renderDivider}
         renderItem={renderItem}
       />
+      <TouchableOpacity
+        onPress={() => setSelected(!isSelected)}
+        style={{
+          width: 40,
+          height: 40,
+          justifyContent: 'center',
+          alignItems: 'center',
+        }}>
+        <Animated.View
+          style={{
+            width: 40,
+            height: 3,
+            backgroundColor: lineColor,
+          }}
+        />
+        <Animated.View
+          style={{
+            position: 'absolute',
+            left: radioAnimated,
+            width: 25,
+            height: 25,
+            borderRadius: 15,
+            backgroundColor: '#ffffff',
+            borderColor: circleColor,
+            borderWidth: 3,
+          }}
+        />
+      </TouchableOpacity>
     </SafeAreaView>
   );
 };
